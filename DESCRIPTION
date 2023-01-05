@@ -2,7 +2,7 @@ Package: EScvtmle
 Type: Package
 Title: Experiment-Selector CV-TMLE for Integration of Observational and
         RCT Data
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: c(
     person("Lauren Eyler", "Dang", email = "lauren.eyler@berkeley.edu", role = c("cre","aut")),
     person("Maya", "Petersen", email = "mayaliv@berkeley.edu", role = "aut"),
@@ -22,9 +22,9 @@ LazyData: true
 RoxygenNote: 7.2.1
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2022-11-01 18:46:48 UTC; laureneeyler
+Packaged: 2022-12-29 18:58:14 UTC; laureneeyler
 Author: Lauren Eyler Dang [cre, aut],
   Maya Petersen [aut],
   Mark van der Laan [aut]
 Repository: CRAN
-Date/Publication: 2022-11-02 14:53:18 UTC
+Date/Publication: 2023-01-05 18:30:02 UTC

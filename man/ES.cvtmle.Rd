@@ -15,10 +15,12 @@ ES.cvtmle(
   NCO = NULL,
   Delta = NULL,
   Delta_NCO = NULL,
+  id = NULL,
   pRCT,
   V = 10,
   Q.SL.library,
-  d.SL.library,
+  d.SL.library.RCT,
+  d.SL.library.RWD,
   g.SL.library,
   Q.discreteSL,
   d.discreteSL,
@@ -26,10 +28,12 @@ ES.cvtmle(
   family,
   family_nco,
   fluctuation = "logistic",
-  comparisons = list(c(1), c(1, 2)),
+  comparisons = list(c(1), c(1, 0)),
   adjustnco = FALSE,
   target.gwt = TRUE,
-  bounds = NULL
+  bounds = NULL,
+  cvControl = list(),
+  MCsamp = 1000
 )
 }
 \arguments{
@@ -37,7 +41,7 @@ ES.cvtmle(
 
 \item{data}{The dataset}
 
-\item{study}{Character name of variable indicating study participation (e.g. "S"). This variable should take a value of 1 for the RCT and should take other values for the other study(ies). Note that the code is currently set up only to handle two studies, but may be expanded to handle multiple studies in the future.}
+\item{study}{Character name of variable indicating study participation (e.g. "S"). This variable should take a value of 1 for the RCT and should take a value of 0 for the RWD. Note that the code is currently set up only to handle two studies, but may be expanded to handle multiple studies in the future.}
 
 \item{covariates}{Vector of character names of covariates to be adjusted for (e.g. c("W1", "W2"))}
 
@@ -53,13 +57,17 @@ ES.cvtmle(
 
 \item{Delta_NCO}{Character name of a variable that is 0 if the value of NCO is missing and 1 otherwise. Missing NCOs may also be coded as NA, in which case a Delta_NCO variable will be added internally. If no missing NCO or no NCO, set Delta_NCO=NULL.}
 
+\item{id}{ID variable for the independent unit}
+
 \item{pRCT}{The probability of randomization to treatment in the RCT}
 
 \item{V}{Number of cross-validation folds (default 10)}
 
 \item{Q.SL.library}{Candidate algorithms for SuperLearner estimation of outcome regressions}
 
-\item{d.SL.library}{Candidate algorithms for SuperLearner estimation of missingness mechanism}
+\item{d.SL.library.RCT}{Candidate algorithms for SuperLearner estimation of missingness mechanism for RCT-only}
+
+\item{d.SL.library.RWD}{Candidate algorithms for SuperLearner estimation of missingness mechanism for RCT+RWD}
 
 \item{g.SL.library}{Candidate algorithms for SuperLearner estimation of treatment mechanism for combined RCT/RWD analysis}
 
@@ -75,13 +83,17 @@ ES.cvtmle(
 
 \item{fluctuation}{'logistic' (default for binary and continuous outcomes), or 'linear' describing fluctuation for targeted maximum likelihood estimation (TMLE) updating. If 'logistic' with a continuous outcome, outcomes are scaled to (0,1) for TMLE targeting and then returned to the original scale for parameter estimation.}
 
-\item{comparisons}{A list of the values of the study variable that you would like to compare. For example, if you have an RCT labeled S=1 and RWD labeled S=2, you would use comparisons = list(c(1),c(1,2)) to compare RCT only to RCT + RWD. The first element of comparisons must be c(1) for the RCT only.}
+\item{comparisons}{A list of the values of the study variable that you would like to compare. For example, if you have an RCT labeled S=1 and RWD labeled S=0, you would use comparisons = list(c(1),c(1,0)) to compare RCT only to RCT + RWD. The first element of comparisons must be c(1) for the RCT only.}
 
 \item{adjustnco}{Should we adjust for the NCO as a proxy of bias in the estimation of the ATE of A on Y? (TRUE/FALSE). Default is FALSE.}
 
 \item{target.gwt}{As in the tmle R package (Gruber & van der Laan, 2012), if target.gwt is TRUE, the treatment mechanism is moved from the denominator of the clever covariate to the weight when fitting the coefficient for TMLE updating. Default TRUE.}
 
 \item{bounds}{Optional bounds for truncation of the denominator of the clever covariate. The default is c(5/sqrt(n)/log(n),1).}
+
+\item{cvControl}{A list of parameters to control the cross-validation process for the SuperLearners. See ?SuperLearner for more details.}
+
+\item{MCsamp}{Number of Monte Carlo samples from the estimated limit distribution to use to estimate quantile-based confidence intervals. Default 1000.}
 }
 \value{
 Returns an object of class "EScvtmle" that is a list with the following components.
@@ -117,17 +129,18 @@ Susan Gruber, Mark J. van der Laan (2012). tmle: An R Package for Targeted Maxim
 \donttest{data(wash)
 #For unbiased external controls, use:
 dat <- wash[which(wash$study \%in\% c(1,2)),]
+dat$study[which(dat$study==2)]<-0
 set.seed(2022)
 results_rwd1 <- ES.cvtmle(txinrwd=TRUE,
                           data=dat, study="study",
                           covariates=c("aged", "sex", "momedu", "hfiacat"),
-                          treatment_var="treatment", treatment=1,
+                          treatment_var="intervention", treatment=1,
                           outcome="laz", NCO="Nlt18scale",
                           Delta=NULL, Delta_NCO=NULL,
                           pRCT=0.5, V=5, Q.SL.library=c("SL.glm"),
                           g.SL.library=c("SL.glm"), Q.discreteSL=TRUE, g.discreteSL=TRUE,
                           family="gaussian", family_nco="gaussian", fluctuation = "logistic",
-                          comparisons = list(c(1),c(1,2)), adjustnco = FALSE, target.gwt = TRUE)
+                          comparisons = list(c(1),c(1,0)), adjustnco = FALSE, target.gwt = TRUE)
 print.EScvtmle(results_rwd1)
 }
 
